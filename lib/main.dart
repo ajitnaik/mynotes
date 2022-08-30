@@ -18,7 +18,8 @@ void main() {
     home: const HomePage(),
     routes: {
       '/login/': (context) => const LoginView(),
-      '/register/': (context) => const RegisterView()
+      '/register/': (context) => const RegisterView(),
+      '/notes/': ((context) => const NotesView())
     },
   ));
 }
@@ -53,7 +54,7 @@ class HomePage extends StatelessWidget {
             //   Navigator.of(context).push(MaterialPageRoute(
             //       builder: (context) => const VerifyEmailView()));
             // }
-            return NotesView();
+            return const NotesView();
 
           default:
             return const Text('Loading');

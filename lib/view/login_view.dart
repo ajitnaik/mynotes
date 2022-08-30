@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -51,28 +53,33 @@ class _LoginViewState extends State<LoginView> {
               onPressed: () async {
                 final email = _email.text;
                 final password = _password.text;
-    
+
                 try {
-                  final userCredential = await FirebaseAuth.instance
-                      .signInWithEmailAndPassword(
-                          email: email, password: password);
-    
-                  print(userCredential);
+                  await FirebaseAuth.instance.signInWithEmailAndPassword(
+                      email: email, password: password);
+
+                  if (!mounted) return;
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    '/notes/',
+                    (route) => false,
+                  );
                 } on FirebaseAuthException catch (e) {
                   if (e.code == 'user-not-found') {
-                    print('User Not found');
+                    log('User Not found');
                   } else if (e.code == 'wrong-password') {
-                    print('Wrong Password');
+                    log('Wrong Password');
                   } else {
-                    print(e);
+                    log(e.toString());
                   }
                 }
               },
-              child: const Text('Login')
-              ),
-              TextButton(onPressed: () {
-                Navigator.of(context).pushNamedAndRemoveUntil('/register/', (route) => false);
-              }, child: const Text('Not Registered yet? Register here!'))
+              child: const Text('Login')),
+          TextButton(
+              onPressed: () {
+                Navigator.of(context)
+                    .pushNamedAndRemoveUntil('/register/', (route) => false);
+              },
+              child: const Text('Not Registered yet? Register here!'))
         ],
       ),
     );
