@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
 import 'package:mynotes/services/crud/crud_exceptions.dart';
@@ -33,12 +34,20 @@ const createNotesTable = '''CREATE TABLE IF NOT EXISTS "notes" (
       ''';
 
 class NotesService {
+
+  NotesService._() {
+    _notesStreamController =  StreamController<List<DatabaseNote>>.broadcast(onListen: (() {
+      _notesStreamController.sink.add(_notes);
+    }));
+  }
+
+  static final instance = NotesService._();
+
   Database? _db;
 
   List<DatabaseNote> _notes = [];
 
-  final _notesStreamController =
-      StreamController<List<DatabaseNote>>.broadcast();
+  late final  StreamController<List<DatabaseNote>> _notesStreamController;
   
   get allNotes => _notesStreamController.stream;
 
@@ -49,6 +58,7 @@ class NotesService {
   }
 
   Database _getDatabaseOrThrow() {
+    open();
     final db = _db;
     if (db == null || !db.isOpen) {
       throw DatabaseNotOpenException();
@@ -74,17 +84,17 @@ class NotesService {
       whereArgs: [email.toLowerCase()],
     );
 
-    if (userExists.isEmpty) {
+    if (userExists.isNotEmpty) {
       throw UserAlreadyExistsException();
     } else {
-      final int userId = await db.insert(
-        createUserTable,
-        {emailColumn: email.toLowerCase()},
-      );
-      return DatabaseUser(
-        id: userId,
-        email: email,
-      );
+  final int userId = await db.insert(
+    userTable,
+    {emailColumn: email.toLowerCase()},
+  );
+  return DatabaseUser(
+    id: userId,
+    email: email,
+  );
     }
   }
 
@@ -97,7 +107,8 @@ class NotesService {
       whereArgs: [email.toLowerCase()],
     );
 
-    if (userExists.isNotEmpty) {
+    log(userExists.toString());
+    if (userExists.isEmpty) {
       throw UserDoesNotExistException();
     } else {
       return DatabaseUser.fromRow(userExists.first);
@@ -120,8 +131,8 @@ class NotesService {
   }
 
   Future<void> open() async {
-    if (_db != null) {
-      throw DatabaseAlreadyOpenException();
+    if (_db != null && _db!.isOpen) {
+      
     }
     try {
       final docsPath = await getApplicationDocumentsDirectory();
@@ -161,7 +172,7 @@ class NotesService {
 
     _notes.add(note);
     _notesStreamController.add(_notes);
-
+    
     return note;
   }
 
@@ -192,7 +203,7 @@ class NotesService {
       whereArgs: [id],
     );
 
-    if (noteExists.isNotEmpty) {
+    if (noteExists.isEmpty) {
       throw NoteDoesNotExistException();
     } else {
       final newNote = DatabaseNote.fromRow(noteExists.first);
@@ -207,7 +218,7 @@ class NotesService {
     final db = _getDatabaseOrThrow();
     final noteExists = await db.query(noteTable);
 
-    if (noteExists.isNotEmpty) {
+    if (noteExists.isEmpty) {
       throw NoteDoesNotExistException();
     } else {
       return noteExists.map((e) => DatabaseNote.fromRow(e));
