@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
+import 'package:mynotes/extensions/list/filter.dart';
 import 'package:mynotes/services/crud/crud_exceptions.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
@@ -47,9 +48,19 @@ class NotesService {
 
   List<DatabaseNote> _notes = [];
 
+  DatabaseUser? _user;
+
   late final  StreamController<List<DatabaseNote>> _notesStreamController;
   
-  get allNotes => _notesStreamController.stream;
+  get allNotes => _notesStreamController.stream.filter(((note) {
+    final currentUser = _user;
+
+    if (currentUser != null) {
+      return note.userId == currentUser.id;
+    } else {
+      throw UserShouldBeSetException();
+    }
+  }));
 
   Future<void> _cacheNotes() async {
     final allNotes = await getAllNotes();
@@ -118,9 +129,11 @@ class NotesService {
   Future<DatabaseUser> getOrCreateUser({required String email}) async {
     try {
       final user = await getUser(email: email);
+      _user = user;
       return user;
     } on UserDoesNotExistException catch (e) {
       final createdUser = await createUser(email: email);
+      _user = createdUser;
       return createdUser;
     }
 
@@ -217,7 +230,6 @@ class NotesService {
   Future<Iterable<DatabaseNote>> getAllNotes() async {
     final db = _getDatabaseOrThrow();
     final noteExists = await db.query(noteTable);
-
     if (noteExists.isEmpty) {
       throw NoteDoesNotExistException();
     } else {
