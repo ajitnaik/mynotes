@@ -1,13 +1,13 @@
-class DatabaseAlreadyOpenException implements Exception {}
+// class DatabaseAlreadyOpenException implements Exception {}
 
-class DatabaseNotOpenException implements Exception {}
+// class DatabaseNotOpenException implements Exception {}
 
-class UnableToGetDocumentsDirectoryException implements Exception {}
+// class UnableToGetDocumentsDirectoryException implements Exception {}
 
-class UserAlreadyExistsException implements Exception {}
+// class UserAlreadyExistsException implements Exception {}
 
-class UserDoesNotExistException implements Exception {}
+// class UserDoesNotExistException implements Exception {}
 
-class NoteDoesNotExistException implements Exception {}
+// class NoteDoesNotExistException implements Exception {}
 
-class UserShouldBeSetException implements Exception {}
+// class UserShouldBeSetException implements Exception {}

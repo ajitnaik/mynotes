@@ -10,15 +10,21 @@ class FirebaseCloudStorage {
 
   final notes = FirebaseFirestore.instance.collection('notes');
 
-  void createNewNote({required String ownerUserId}) async {
+  Future<CloudNote> createNewNote({required String ownerUserId}) async {
     try {
-  await notes.add({
-    ownerUserIdFieldName: ownerUserId,
-    textFieldName: '',
-  });
-} on Exception catch (e) {
-  throw CouldNotCreateNoteException();
-}
+      final document = await notes.add({
+        ownerUserIdFieldName: ownerUserId,
+        textFieldName: '',
+      });
+      final fetchedNote = await document.get();
+      return CloudNote(
+        documentId: fetchedNote.id,
+        ownerUserId: ownerUserId,
+        text: '',
+      );
+    } on Exception catch (e) {
+      throw CouldNotCreateNoteException();
+    }
   }
 
   Future<Iterable<CloudNote>> getNotes({required ownerUserId}) async {
@@ -46,7 +52,6 @@ class FirebaseCloudStorage {
 
   Future<void> deleteNote({
     required String documentId,
-    required String text,
   }) async {
     try {
       await notes.doc(documentId).delete();
