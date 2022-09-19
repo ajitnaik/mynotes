@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mynotes/services/auth/auth_exceptions.dart';
@@ -5,7 +7,6 @@ import 'package:mynotes/services/auth/bloc/auth_bloc.dart';
 import 'package:mynotes/services/auth/bloc/auth_event.dart';
 import 'package:mynotes/services/auth/bloc/auth_state.dart';
 import 'package:mynotes/utilities/dialogs/error_dialog.dart';
-import 'package:mynotes/utilities/dialogs/loading_dialog.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({Key? key}) : super(key: key);
@@ -17,7 +18,6 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   late final TextEditingController _email;
   late final TextEditingController _password;
-  CloseDialog? _closeDialog;
 
   @override
   void initState() {
@@ -39,17 +39,6 @@ class _LoginViewState extends State<LoginView> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) async {
         if (state is AuthStateLoggedOut) {
-          final closedDialog = _closeDialog;
-
-          if (!state.isLoading && closedDialog != null) {
-            closedDialog();
-            _closeDialog = null;
-          } else if (state.isLoading && closedDialog == null) {
-            _closeDialog = showLoadingDialog(
-              context: context,
-              text: 'Loadin...',
-            );
-          }
           if (state.exception is UserNotFoundAuthException) {
             await showErrorDialog(
               context,
@@ -65,6 +54,7 @@ class _LoginViewState extends State<LoginView> {
               context,
               'An Error occurred',
             );
+            log(state.exception.toString());
           }
         }
       },
@@ -98,6 +88,11 @@ class _LoginViewState extends State<LoginView> {
                       ));
                 },
                 child: const Text('Login')),
+            TextButton(
+                onPressed: () async {
+                  context.read<AuthBloc>().add(const AuthEventForgotPassword(null));
+                },
+                child: const Text('Forgot Password')),
             TextButton(
                 onPressed: () {
                   context.read<AuthBloc>().add(const AuthEventShouldRegister());
